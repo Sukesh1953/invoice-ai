@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Extraction Result</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+
+    <div class="card shadow p-4">
+        <h3 class="mb-4">Extracted Invoice Data</h3>
+
+        {% for page in results %}
+        <table class="table table-bordered">
+            <tr>
+                <th>Vendor Name</th>
+                <td>{{ page.extracted_fields.vendor_name }}</td>
+            </tr>
+            <tr>
+                <th>Invoice Number</th>
+                <td>{{ page.extracted_fields.invoice_number }}</td>
+            </tr>
+            <tr>
+                <th>Invoice Date</th>
+                <td>{{ page.extracted_fields.invoice_date }}</td>
+            </tr>
+            <tr>
+                <th>Subtotal</th>
+                <td>{{ page.extracted_fields.subtotal }}</td>
+            </tr>
+            <tr>
+                <th>Tax</th>
+                <td>{{ page.extracted_fields.tax }}</td>
+            </tr>
+            <tr>
+                <th>Total</th>
+                <td>{{ page.extracted_fields.total_amount }}</td>
+            </tr>
+            <tr>
+                <th>Confidence</th>
+                <td>
+                    {% if page.extracted_fields.confidence == "HIGH" %}
+                        <span class="badge bg-success">HIGH</span>
+                    {% elif page.extracted_fields.confidence == "MEDIUM" %}
+                        <span class="badge bg-warning text-dark">MEDIUM</span>
+                    {% else %}
+                        <span class="badge bg-danger">LOW</span>
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+        {% endfor %}
+
+        <a href="/" class="btn btn-secondary mt-3">Upload Another</a>
+
+    </div>
+
+</div>
+
+</body>
+</html>
+<form action="/download-json" method="post">
+    <input type="hidden" name="data" value='{{ results | tojson | safe }}'>
+    <button class="btn btn-success mt-3">Download JSON</button>
+</form>
+<form action="/download-csv" method="post">
+    <input type="hidden" name="data" value='{{ results | tojson | safe }}'>
+    <button class="btn btn-primary mt-2">Download CSV</button>
+</form>
