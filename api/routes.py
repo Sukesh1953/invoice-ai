@@ -20,7 +20,6 @@ from api.extractor import (
 )
 
 # IMPORTANT (Windows Users)
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
