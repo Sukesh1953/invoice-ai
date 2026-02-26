@@ -1,10 +1,11 @@
 FROM python:3.11-slim
 
-# Install Tesseract
+# Install system dependencies (Tesseract + Poppler)
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
     libtesseract-dev \
     libleptonica-dev \
+    poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
