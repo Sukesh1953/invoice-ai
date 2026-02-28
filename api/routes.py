@@ -1,9 +1,12 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
+
 from pdf2image import convert_from_bytes
 from PIL import Image
 import pytesseract
+import fitz  # PyMuPDF
+
 import io
 import json
 import csv
@@ -19,8 +22,6 @@ from api.extractor import (
     calculate_confidence
 )
 
-# IMPORTANT (Windows Users)
-
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
@@ -34,13 +35,34 @@ async def extract_invoice(request: Request, file: UploadFile = File(...)):
         contents = await file.read()
         filename = file.filename.lower()
 
+        results = []
         images = []
+        extracted_text = ""
 
+        # ----------------------------------------
         # PDF Handling
+        # ----------------------------------------
         if filename.endswith(".pdf"):
-            images = convert_from_bytes(contents)
 
+            # Try direct text extraction first (Digital PDF)
+            pdf_document = fitz.open(stream=contents, filetype="pdf")
+
+            for page in pdf_document:
+                extracted_text += page.get_text()
+
+            pdf_document.close()
+
+            # If digital PDF contains text
+            if extracted_text.strip():
+                pass  # We already have extracted_text
+
+            else:
+                # Scanned PDF → fallback to OCR
+                images = convert_from_bytes(contents)
+
+        # ----------------------------------------
         # Image Handling
+        # ----------------------------------------
         elif filename.endswith((".png", ".jpg", ".jpeg")):
             image = Image.open(io.BytesIO(contents))
 
@@ -52,55 +74,54 @@ async def extract_invoice(request: Request, file: UploadFile = File(...)):
         else:
             raise HTTPException(status_code=400, detail="Unsupported file type")
 
-        results = []
+        # ----------------------------------------
+        # OCR Processing (if needed)
+        # ----------------------------------------
+        if images:
+            for image in images:
 
-        for image in images:
+                # Resize for better OCR accuracy
+                image = image.resize(
+                    (image.width * 2, image.height * 2),
+                    Image.LANCZOS
+                )
 
-            # Resize image for better OCR
-            image = image.resize(
-                (image.width * 2, image.height * 2),
-                Image.LANCZOS
-            )
+                raw_text = pytesseract.image_to_string(
+                    image,
+                    lang="eng",
+                    config="--oem 3 --psm 6"
+                )
 
-            # OCR
-            raw_text = pytesseract.image_to_string(
-                image,
-                lang="eng",
-                config="--oem 3 --psm 6"
-            )
+                extracted_text += raw_text
 
-            cleaned_text = clean_text(raw_text)
+        # ----------------------------------------
+        # Clean & Extract Fields
+        # ----------------------------------------
+        cleaned_text = clean_text(extracted_text)
 
-            print("======== CLEANED TEXT ========")
-            print(cleaned_text)
-            print("================================")
+        vendor_name = extract_vendor_name(cleaned_text)
+        invoice_number = extract_invoice_number(cleaned_text)
+        invoice_date = extract_invoice_date(cleaned_text)
+        subtotal = extract_subtotal(cleaned_text)
+        tax = extract_tax(cleaned_text)
+        total = extract_total_amount(cleaned_text)
+        confidence = calculate_confidence(subtotal, tax, total)
 
-            # Extract fields
-            vendor_name = extract_vendor_name(cleaned_text)
-            invoice_number = extract_invoice_number(cleaned_text)
-            invoice_date = extract_invoice_date(cleaned_text)
+        extracted_fields = {
+            "vendor_name": vendor_name,
+            "invoice_number": invoice_number,
+            "invoice_date": invoice_date,
+            "subtotal": subtotal,
+            "tax": tax,
+            "total_amount": total,
+            "confidence": confidence
+        }
 
-            subtotal = extract_subtotal(cleaned_text)
-            tax = extract_tax(cleaned_text)
-            total = extract_total_amount(cleaned_text)
-
-            confidence = calculate_confidence(subtotal, tax, total)
-
-            extracted_fields = {
-                "vendor_name": vendor_name,
-                "invoice_number": invoice_number,
-                "invoice_date": invoice_date,
-                "subtotal": subtotal,
-                "tax": tax,
-                "total_amount": total,
-                "confidence": confidence
-            }
-
-            results.append({
-                "raw_text": raw_text,
-                "cleaned_text": cleaned_text,
-                "extracted_fields": extracted_fields
-            })
+        results.append({
+            "raw_text": extracted_text,
+            "cleaned_text": cleaned_text,
+            "extracted_fields": extracted_fields
+        })
 
         return templates.TemplateResponse(
             "result.html",
