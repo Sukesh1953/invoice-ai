@@ -15,29 +15,40 @@ import re
 
 def extract_vendor_name(text):
     try:
-        # Try to get first meaningful line
         lines = text.split("\n")
 
-        for line in lines:
+        # Take only top 10 lines (most vendor names are here)
+        top_lines = lines[:10]
+
+        for line in top_lines:
             line = line.strip()
 
-            # Skip empty or invoice-related lines
             if not line:
                 continue
-            if "invoice" in line.lower():
-                continue
-            if "bill to" in line.lower():
-                continue
-            if len(line) < 3:
+
+            lower = line.lower()
+
+            # Skip unwanted lines
+            if any(keyword in lower for keyword in [
+                "invoice",
+                "bill to",
+                "ship to",
+                "date",
+                "subtotal",
+                "total",
+                "tax"
+            ]):
                 continue
 
-            # Remove unwanted trailing parts
-            cleaned = re.split(r"invoice|bill to|date|#", line, flags=re.IGNORECASE)[0]
+            # Skip numeric-heavy lines
+            if sum(c.isdigit() for c in line) > 3:
+                continue
 
-            cleaned = cleaned.strip()
+            # Remove anything after invoice keyword
+            cleaned = re.split(r"invoice|#", line, flags=re.IGNORECASE)[0].strip()
 
-            # Basic sanity filter
-            if len(cleaned.split()) <= 6:
+            # Must contain at least 2 words
+            if len(cleaned.split()) >= 2:
                 return cleaned
 
         return "Vendor Not Found"
@@ -105,16 +116,29 @@ def extract_total_amount(text):
 # CONFIDENCE LOGIC
 # -------------------------
 def calculate_confidence(subtotal, tax, total):
-    if subtotal and tax and total:
-        if abs((subtotal + tax) - total) < 1:
-            return "HIGH"
-        else:
-            return "MEDIUM"
+    score = 0
 
-    if total:
+    if subtotal and total:
+        score += 40
+
+    if tax is not None:
+        score += 20
+
+    # Arithmetic validation
+    if subtotal and total:
+        try:
+            calculated = subtotal + (tax if tax else 0)
+            if abs(calculated - total) < 1:
+                score += 40
+        except:
+            pass
+
+    if score >= 80:
+        return "HIGH"
+    elif score >= 50:
+        return "MEDIUM"
+    else:
         return "LOW"
-
-    return "FAILED"
 
 
 
