@@ -2,7 +2,7 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 
-from pdf2image import convert_from_bytes
+
 from PIL import Image
 import pytesseract
 import fitz  # PyMuPDF
@@ -59,6 +59,14 @@ async def extract_invoice(request: Request, file: UploadFile = File(...)):
             else:
                 # Scanned PDF → fallback to OCR
                 images = convert_from_bytes(contents)
+                if not extracted_text.strip():
+                    pdf_document = fitz.open(stream=contents, filetype="pdf")
+                    for page in pdf_document:
+                        pix = page.get_pixmap(dpi=300)
+                        img = Image.open(io.BytesIO(pix.tobytes()))
+                        images.append(img)
+
+                    pdf_document.close()
 
         # ----------------------------------------
         # Image Handling
