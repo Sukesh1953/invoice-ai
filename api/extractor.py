@@ -11,30 +11,39 @@ def clean_text(text: str) -> str:
 # -------------------------
 # BASIC FIELD EXTRACTION
 # -------------------------
-def extract_vendor_name(text: str) -> str:
-    lines = [line.strip() for line in text.split("\n") if line.strip()]
+import re
 
-    invalid_keywords = [
-        "invoice", "bill", "date",
-        "gst", "total", "subtotal",
-        "tax", "amount", "balance", "due"
-    ]
+def extract_vendor_name(text):
+    try:
+        # Try to get first meaningful line
+        lines = text.split("\n")
 
-    # Only look at first 25 lines
-    for line in lines[:25]:
+        for line in lines:
+            line = line.strip()
 
-        lower = line.lower()
+            # Skip empty or invoice-related lines
+            if not line:
+                continue
+            if "invoice" in line.lower():
+                continue
+            if "bill to" in line.lower():
+                continue
+            if len(line) < 3:
+                continue
 
-        if any(keyword in lower for keyword in invalid_keywords):
-            continue
+            # Remove unwanted trailing parts
+            cleaned = re.split(r"invoice|bill to|date|#", line, flags=re.IGNORECASE)[0]
 
-        if len(line) < 3:
-            continue
+            cleaned = cleaned.strip()
 
-        return line
+            # Basic sanity filter
+            if len(cleaned.split()) <= 6:
+                return cleaned
 
-    # If nothing found, fallback to first line
-    return lines[0] if lines else "Not Found"
+        return "Vendor Not Found"
+
+    except:
+        return "Vendor Not Found"
 
 
 def extract_invoice_number(text: str):
