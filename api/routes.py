@@ -71,6 +71,10 @@ async def extract_invoice(request: Request, file: UploadFile = File(...)):
 
             cleaned_text = clean_text(raw_text)
 
+            print("======== CLEANED TEXT ========")
+            print(cleaned_text)
+            print("================================")
+
             # Extract fields
             vendor_name = extract_vendor_name(cleaned_text)
             invoice_number = extract_invoice_number(cleaned_text)

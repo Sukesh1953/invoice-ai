@@ -15,38 +15,26 @@ def extract_vendor_name(text: str) -> str:
     lines = [line.strip() for line in text.split("\n") if line.strip()]
 
     invalid_keywords = [
-        "invoice",
-        "invoice #",
-        "bill",
-        "date",
-        "gst",
-        "total",
-        "subtotal",
-        "tax",
-        "amount",
-        "balance",
-        "due"
+        "invoice", "bill", "date",
+        "gst", "total", "subtotal",
+        "tax", "amount", "balance", "due"
     ]
 
-    for line in lines[:15]:  # Only inspect top section of invoice
+    # Only look at first 25 lines
+    for line in lines[:25]:
+
         lower = line.lower()
 
-        # Skip unwanted keywords
         if any(keyword in lower for keyword in invalid_keywords):
             continue
 
-        # Skip lines that are mostly numbers
-        digit_ratio = sum(c.isdigit() for c in line) / max(len(line), 1)
-        if digit_ratio > 0.4:
-            continue
-
-        # Skip very short lines
-        if len(line) < 4:
+        if len(line) < 3:
             continue
 
         return line
 
-    return "Not Found"
+    # If nothing found, fallback to first line
+    return lines[0] if lines else "Not Found"
 
 
 def extract_invoice_number(text: str):
