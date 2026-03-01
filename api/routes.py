@@ -158,6 +158,7 @@ async def api_extract_invoice(request: Request, file: UploadFile = File(...)):
 # ======================================================
 # API JSON ENDPOINT (For SaaS)
 # ======================================================
+import os
 @router.post("/api/extract")
 async def api_extract_json(
     file: UploadFile = File(...),
@@ -165,10 +166,12 @@ async def api_extract_json(
 ):
 
     # 🔐 Hardcoded API key (for now)
-    SECRET_API_KEY = "supersecret123"
+    SECRET_API_KEY = os.getenv("API_KEY")
 
     if x_api_key != SECRET_API_KEY:
         raise HTTPException(status_code=401, detail="Invalid or missing API Key")
+    
+    print(f"API call received from key: {x_api_key}")
 
     contents = await file.read()
     filename = file.filename.lower()
