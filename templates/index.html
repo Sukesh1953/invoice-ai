@@ -1,25 +1,114 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Invoice AI Automation</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Invoice AI API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #f7f9fc;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 40px 20px;
+        }
+        h1 {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        h2 {
+            margin-top: 50px;
+        }
+        .hero {
+            text-align: center;
+            padding: 60px 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 20px;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+        .code {
+            background: #111;
+            color: #0f0;
+            padding: 20px;
+            overflow-x: auto;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+    </style>
 </head>
-<body class="bg-light">
+<body>
 
-<div class="container mt-5">
-    <div class="card shadow p-4">
-        <h2 class="text-center mb-4">Invoice Extraction System</h2>
+<div class="container">
 
-        <form action="/extract-invoice" method="post" enctype="multipart/form-data">
-            <div class="mb-3">
-                <input type="file" name="file" class="form-control" required>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100">
-                Upload & Extract
-            </button>
-        </form>
+    <div class="hero">
+        <h1>Invoice AI Extraction API</h1>
+        <p>Extract structured invoice data from PDFs in seconds.</p>
+        <a class="btn" href="/docs">Try API</a>
     </div>
+
+    <h2>What It Does</h2>
+    <div class="card">
+        Upload any invoice PDF and get:
+        <ul>
+            <li>Vendor Name</li>
+            <li>Invoice Number</li>
+            <li>Invoice Date</li>
+            <li>Subtotal</li>
+            <li>Tax</li>
+            <li>Total Amount</li>
+            <li>Confidence Score</li>
+        </ul>
+    </div>
+
+    <h2>Example JSON Response</h2>
+    <div class="code">
+{
+  "vendor_name": "GREENLEAF TECHNOLOGIES",
+  "invoice_number": "GL-7789",
+  "invoice_date": "2026-02-01",
+  "subtotal": 52000,
+  "tax": 18,
+  "total_amount": "61360.00",
+  "confidence": "HIGH"
+}
+    </div>
+
+    <h2>How It Works</h2>
+    <div class="card">
+        1. Send PDF to /api/extract <br>
+        2. Add your x-api-key header <br>
+        3. Receive structured JSON instantly
+    </div>
+
+    <h2>Use Cases</h2>
+    <div class="card">
+        • Accounting automation <br>
+        • Workflow automation (Zapier, Make, n8n) <br>
+        • SaaS finance dashboards <br>
+        • Bulk invoice processing
+    </div>
+
+    <h2>Get API Access</h2>
+    <div class="card">
+        Email: your-email@example.com <br><br>
+        Early beta access available.
+    </div>
+
 </div>
 
 </body>

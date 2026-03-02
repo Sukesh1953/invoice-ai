@@ -259,6 +259,9 @@ async def download_csv(data: str = Form(...)):
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=invoice_data.csv"}
     )
+@router.get("/", response_class=HTMLResponse)
+async def landing_page(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 
 
