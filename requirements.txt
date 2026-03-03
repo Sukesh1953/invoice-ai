@@ -16,3 +16,4 @@ rsa==4.9.1
 urllib3==2.6.3
 uvicorn[standard]
 fastapi
+Pillow
