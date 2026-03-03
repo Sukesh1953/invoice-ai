@@ -6,6 +6,8 @@ from PIL import Image
 import pytesseract
 import fitz  # PyMuPDF
 
+import gspread
+from google.oauth2.service_account import Credentials
 import io
 import json
 import csv
@@ -24,7 +26,21 @@ from api.extractor import (
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
+# ======================================================
+# GOOGLE SHEETS SETUP
+# ======================================================
 
+SHEET_ID = "1Ejj-t7xsDIkiSioDqZjZuVUfp2Ht98AIL14g2kL_drA"
+
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+
+creds = Credentials.from_service_account_file(
+    "google_credentials.json",
+    scopes=SCOPES
+)
+
+client = gspread.authorize(creds)
+sheet = client.open_by_key(SHEET_ID).sheet1
 # ======================================================
 # EXTRACT INVOICE
 # ======================================================
@@ -207,6 +223,15 @@ async def api_extract_json(
         subtotal,
         tax
     )
+    sheet.append_row([
+        vendor_name,
+        invoice_number,
+        invoice_date,
+        subtotal,
+        tax,
+        total,
+        confidence
+    ])
 
     return {
         "vendor_name": vendor_name,
