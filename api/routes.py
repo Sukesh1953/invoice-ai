@@ -30,16 +30,23 @@ templates = Jinja2Templates(directory="templates")
 # GOOGLE SHEETS SETUP
 # ======================================================
 
+import os
+import json
+import gspread
+from google.oauth2.service_account import Credentials
+
 SHEET_ID = "1Ejj-t7xsDIkiSioDqZjZuVUfp2Ht98AIL14g2kL_drA"
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
-creds = Credentials.from_service_account_file(
-    "google_credentials.json",
+creds_dict = json.loads(os.getenv("GOOGLE_CREDENTIALS_JSON"))
+
+credentials = Credentials.from_service_account_info(
+    creds_dict,
     scopes=SCOPES
 )
 
-client = gspread.authorize(creds)
+client = gspread.authorize(credentials)
 sheet = client.open_by_key(SHEET_ID).sheet1
 # ======================================================
 # EXTRACT INVOICE
